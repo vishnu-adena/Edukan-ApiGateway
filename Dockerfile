@@ -1,20 +1,28 @@
-#
-# Build del proyecto (Multi-Stage)
-# --------------------------------
-#
-# Usamos una imagen de Maven para hacer build de proyecto con Java
-# Llamaremos a este sub-entorno "build"
-# Copiamos todo el contenido del repositorio
-# Ejecutamos el comando mvn clean package (Generara un archivo JAR para el despliegue)
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-COPY . .
-RUN mvn clean package
+# Use an official Maven image with JDK 21 to build the application
+FROM maven:3.8.8-eclipse-temurin-21 AS build
 
-# Usamos una imagen de Openjdk
-# Exponemos el puerto que nuestro componente va a usar para escuchar peticiones
-# Copiamos desde "build" el JAR generado (la ruta de generacion es la misma que veriamos en local) y lo movemos y renombramos en destino como 
-# Marcamos el punto de arranque de la imagen con el comando "java -jar app.jar" que ejecutará nuestro componente.
-FROM openjdk:21
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the pom.xml and source code into the container
+COPY pom.xml .
+COPY src ./src
+
+# Package the application
+RUN mvn clean package -DskipTests
+
+# Use a smaller base image to run the application
+FROM eclipse-temurin:21-jre-alpine
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the JAR file from the build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose the port the app runs on
+
 EXPOSE 8762
-COPY --from=build /target/gateway-0.0.1-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+# Command to run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
