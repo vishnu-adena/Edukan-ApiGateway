@@ -8,7 +8,7 @@ image:
   repository: nginx
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "10351010966"
+  tag: "10351414918"
 
 eureka:
   url: http://eureka-service:8761/eureka/
