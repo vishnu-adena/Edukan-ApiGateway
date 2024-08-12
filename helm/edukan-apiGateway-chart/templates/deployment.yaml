@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway-container
+          image: vishnu11759/edukan-api-gateway:{{.Values.image.tag}}
+          ports:
+            - containerPort: 8762
+          env:
+            - name: EUREKA_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: api-gateway-config
+                  key: eurekaUrl
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: APPLICATION_NAME
+              value: api-gateway
+            - name: SERVER_PORT
+              value: "8762"
